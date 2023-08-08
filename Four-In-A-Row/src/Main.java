@@ -10,13 +10,14 @@ public class Main {
         }
     }
 
-    //Global variables
     static int[][] board = {{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0}};
     static String player1;
     static String player2;
 
     static Boolean player1first;
     static Boolean gameOver = false;
+    static boolean bot1 = false;
+    static boolean bot2 = false;
 
 
 
@@ -53,9 +54,29 @@ public class Main {
         player1 = myScanner.nextLine();
         System.out.println("Hello, " + player1 + ".");
 
-        System.out.println("Player #2, enter your name:");
-        player2 = myScanner.nextLine();
-        System.out.println("Hello, " + player2 + ".");
+        String input = "";
+        String message = "";
+        while (true) {
+            System.out.println("For player 2, press 1 for human, press 2 for simple random bot");
+            input = myScanner.nextLine();
+
+            if (input.equals("1")){
+                System.out.println("Player #2, enter your name:");
+                player2 = myScanner.nextLine();
+                System.out.println("Hello, " + player2 + ".");
+                break;
+
+            } else if (input.equals("2")){
+                player2 = "simple random Bot";
+                System.out.println("Hello, " + player2 + ".");
+                bot1 = true;
+                break;
+            } else {
+                System.out.println("Please try again");
+            }
+        }
+
+
 
 
         System.out.println("(Randomizing...)");
@@ -79,38 +100,53 @@ public class Main {
     }
 
     public static void playerTurn(String player, int id){
-        String message;
-        String input;
+        String message = "";
+        String input = "";
         int output;
 
         //validate the input
-        while (true) {
-            System.out.println(player + ", choose a column: ");
-            Scanner myScanner = new Scanner(System.in);
-            input = myScanner.nextLine();
 
-            if (input == null) {
-                message = ("Null. Please input a valid column number integer");
-                System.out.println(message);
-                continue;
+        if (id == 2 && bot1){
+            while (true) {
+                System.out.println(player + ", choose a column: ");
+                output = (int) (Math.random() * 7);
+                System.out.println(output+1);
+                if (board[0][output] != 0) {
+                    message = ("Full. Please input a valid column number that is not full");
+                    System.out.println(message);
+                    continue;
+                } else {
+                    break;
+                }
             }
-            if (input.equals("q")) {
-                System.out.println("Thanks for playing! Goodbye");
-                System.exit(0);
+        } else {
+
+            while (true) {
+                System.out.println(player + ", choose a column: ");
+
+                Scanner myScanner = new Scanner(System.in);
+                input = myScanner.nextLine();
+
+                if (input.equals("q")) {
+                    System.out.println("Thanks for playing! Goodbye");
+                    System.exit(0);
+                }
+                try {
+                    output = Integer.parseInt(input) - 1;
+                } catch (NumberFormatException nfe) {
+                    message = ("Not and integer. Please input a valid column number integer");
+                    System.out.println(message);
+                    continue;
+                }
+                if (board[0][output] != 0) {
+                    message = ("Full. Please input a valid column number that is not full");
+                    System.out.println(message);
+                    continue;
+                }
+                break;
+
+
             }
-            try {
-                output = Integer.parseInt(input)-1;
-            } catch (NumberFormatException nfe){
-                message = ("Not and integer. Please input a valid column number integer");
-                System.out.println(message);
-                continue;
-            }
-            if (board[0][output] != 0) {
-                message = ("Full. Please input a valid column number that is not full");
-                System.out.println(message);
-                continue;
-            }
-            break;
         }
         //call a method to drop a disc
         dropDisc(output, id);
