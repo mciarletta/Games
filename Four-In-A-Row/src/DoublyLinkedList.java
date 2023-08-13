@@ -9,20 +9,11 @@ public class DoublyLinkedList {
     }
 
     //output info from head to talk. For debugging
-    public void headToTail(){
+    public void printList(){
         Node current = head;
         while(current !=null){
-            System.out.printf("%s, %s, %s %n", current.info[0],current.info[1],current.info[2]);
+            System.out.printf("%s, %s, %s, %s %n", current.info[0],current.info[1],current.info[2], current.info[3]);
             current = current.next;
-        }
-    }
-
-    //output info from head to talk. For debugging
-    public void goToBack(){
-        Node current = tail;
-        while(current !=null){
-            System.out.println(current.info + " ");
-            current = current.prev;
         }
     }
 
@@ -39,6 +30,10 @@ public class DoublyLinkedList {
         }
     }
 
+    public void removeHead(){
+        this.head = head.next;
+    }
+
     //insert at the end - make a new tail
     public void insertBack(int[] info){
         Node temp =  new Node(info);
@@ -46,9 +41,13 @@ public class DoublyLinkedList {
             head = temp;
             tail = temp;
         } else { //replace the current tail
-            tail.next = temp;
             temp.prev = tail;
+            tail.next = temp;
             tail = temp;
         }
+    }
+
+    public void removeTail(){
+        this.tail = tail.prev;
     }
 }
