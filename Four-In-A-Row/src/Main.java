@@ -447,39 +447,6 @@ public class Main {
             System.out.println();
 
         }
-        //check if there is a connector when count = 2 and //&& countMax == 2 countMax == 2
-        if (count == 2) {
-            //the head or tail must be blank in order to be a connector
-            if (line.head.info[2] == 0) {
-                //check the line from that point using the same direction
-                ArrayList<DoublyLinkedList> connectors = new ArrayList<DoublyLinkedList>();
-                //check first, then make sure you are checking so it doesn't loop
-                if (!checkingConnector) {
-                    connectors.add(findLine(line.head.info[0], line.head.info[1], id, 2, direction, print, true));
-                }
-                for (DoublyLinkedList conLine : connectors) {
-                    if (conLine != null) {
-                        //the head is a connector
-                        if (print) System.out.println("The head is a connector");
-                        line.head.info[3] = 1;
-                    }
-                }
-            }
-            if (line.tail.info[2] == 0) {
-                //check the line from that point using the same direction
-                ArrayList<DoublyLinkedList> connectors = new ArrayList<DoublyLinkedList>();
-                if (!checkingConnector) {
-                    connectors.add(findLine(line.tail.info[0], line.tail.info[1], id, 2, direction, print, true));
-                }
-                for (DoublyLinkedList conLine : connectors) {
-                    if (conLine != null) {
-                        //the head is a connector
-                        if (print) System.out.println("The tail is a connector");
-                        line.tail.info[3] = 1;
-                    }
-                }
-            }
-        }
 
         if (count >= countMax) {
             return line;
@@ -531,22 +498,6 @@ public class Main {
             return null;
         }
 
-        //for a special connection, check if the flag has been raised in one of the chipLines
-        for (DoublyLinkedList line : chipLines) {
-            if (line != null) {
-                //check the connection flag on the head and tail
-                if (line.head.info[3] == 1) {
-                    columnChoices.add(line.head.info[1]);
-                    if (print) System.out.println("The head is a connector at " + columnChoices);
-                    return columnChoices;
-                }
-                if (line.tail.info[3] == 1) {
-                    columnChoices.add(line.tail.info[1]);
-                    if (print) System.out.println("The tail is a connector at " + columnChoices);
-                    return columnChoices;
-                }
-            }
-        }
 
         //there's no connector, get the column choices
         for (DoublyLinkedList line : chipLines) {
@@ -588,14 +539,14 @@ public class Main {
             if (emptyCondition && headPossible && tailPossible && twoEmpties) {
                 if (!columnChoices.contains(headChip[1])) {
                     columnChoices.add(headChip[1]);
-                    if (print) {
-                        System.out.println("Added " + headChip[1] + " to the column choices");
+                    if (print || debugMode) {
+                        System.out.println("Added " + headChip[1] + " to the column choices. Both head and tail were empty");
                     }
                 }
                 if (!columnChoices.contains(tailChip[1])) {
                     columnChoices.add(tailChip[1]);
-                    if (print) {
-                        System.out.println("Added " + tailChip[1] + " to the column choices");
+                    if (print || debugMode) {
+                        System.out.println("Added " + tailChip[1] + " to the column choices. Both head and tail were empty");
                     }
                 }
 
@@ -643,7 +594,7 @@ public class Main {
             }
 
         }
-        if (print) {
+        if (print || debugMode) {
             System.out.print("found column choices: ");
             System.out.println(columnChoices);
             for (Integer i : columnChoices) {
@@ -744,6 +695,7 @@ public class Main {
 
 
         checkOutResults = checkOutput(choices);
+        if (debugMode) System.out.println("After checking the ouputs the remaining column choices are: " + checkOutResults);
         if ((oneEmptyAfter || twoEmptiesAfter) && checkOutResults != -1) {
             //check the possibles to get the coordinates of the move
             for (int[] pos : possibles) {
@@ -751,7 +703,7 @@ public class Main {
                     //run a line check
                     ArrayList<DoublyLinkedList> checkLines = new ArrayList<DoublyLinkedList>();
                     for (int direction = 0; direction < 4; direction++) { //there are four possible directions atm, so go through 4 iterations
-                        checkLines.add(findLine(pos[0], checkOutResults, 2, 3, direction, false, false));
+                        checkLines.add(findLine(pos[0], checkOutResults, id, 3, direction, false, false));
                     }
                     for (DoublyLinkedList line : checkLines) {
                         //check that the line isn't null and that both the head and tail have empty spaces
@@ -762,17 +714,19 @@ public class Main {
                             emptyCondition = (line.head.info[2] == 0 || line.tail.info[2] == 0);
                         }
                         if (line != null && emptyCondition) {
-                            if (debugMode) System.out.println(message);
+                            if (debugMode) System.out.println(message + " one empty: " + oneEmptyAfter + " two empty: " + twoEmptiesAfter);
                             return checkOutResults;
                         }
                     }
                 }
             }
         } else if (checkOutResults != -1) {
+            if (debugMode) System.out.println("one or two empties was not set. Taking a column after check out");
             if (debugMode) System.out.println(message);
             return checkOutResults;
         }
         //if no move is found, return -1
+        if (debugMode) System.out.println("no move was found");
         return -1;
     }
 
@@ -791,39 +745,48 @@ public class Main {
         }
 
         //check if the next move can win the game
-        output = botMove(2, 3, false, false, false, false, "Bot moves to win");
-        if (output != -1) return output;
-
-        //check if the next winning move involves connecting a 2 to a 1 line
-        findMove(2, 2, false, false);
-        if (output != -1){
-            System.out.println("filling the connection for the win");
-            return output;
+        if (debugMode) System.out.println("Bot is checking for the win");
+        for (int[] pos : possibles){
+            if (nextMoveHasFour(pos[0],pos[1], 2)){
+                if (debugMode) System.out.println("Bot goes for the win");
+                return pos[1];
+            }
         }
 
 
         //check if defense is needed to block next move (player has three in a row)
-        output = botMove(1, 3, false, false, false, false, "Bot moves to block a 3 sized line");
-        if (output != -1) return output;
+        if (debugMode) System.out.println("Bot is checking to block a winning move");
+        for (int[] pos : possibles){
+            if (nextMoveHasFour(pos[0],pos[1], 1)){
+                if (debugMode) System.out.println("Bot goes to block a winning line");
+                return pos[1];
+            }
+        }
+
 
         //------from here we must check that the move will not result in a loss either-------//
         //check if can make a three with two empties after
+        if (debugMode) System.out.println("Bot is checking to make a three with two empties after");
         output = botMove(2, 2, true, false, true, true, "Bot moves to make a 3 with 2 empties, oh yeah");
         if (output != -1) return output;
 
         //check if can make a three with one empty after
+        if (debugMode) System.out.println("Bot is checking to make a three with one empty after");
         output = botMove(2, 2, true, true, false, true, "Bot moves to make a 3 with 2 empties, oh yeah");
         if (output != -1) return output;
 
         //check if can block a two with two empties
-        output = botMove(1, 2, true, false, false, true, "Bot moves to block a 2 with 2 empties");
+        if (debugMode) System.out.println("Bot is checking to make a block of possible a three with two empties after");
+        output = botMove(1, 2, true, false, true, true, "Bot moves to block a 2 with 2 empties");
         if (output != -1) return output;
 
         //check if can make three with one empty
+        if (debugMode) System.out.println("Bot is checking to make a three");
         output = botMove(2, 2, false, true, false, true, "Bot moves to make three with one empty");
         if (output != -1) return output;
 
         //check if can make a 2 with two empties
+        if (debugMode) System.out.println("Bot is checking to make a two with two empties after");
         output = botMove(2, 1, true, false, true, true, "Bot moves to make a 2 with 2 emmpties after");
         if (output != -1) return output;
 
@@ -861,7 +824,10 @@ public class Main {
 
         }
         if (debugMode) System.out.println("choice of desperation");
-        return order[6];
+        for (int[] pos : possibles){
+            return pos[1];
+        }
+        return possibles.get(0)[1];
     }
 
 }
